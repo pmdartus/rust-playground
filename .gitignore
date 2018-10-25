@@ -4,3 +4,7 @@ format
 debug
 display
 list
+
+primitves
+tuple
+array-and-slice
