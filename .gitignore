@@ -1,3 +1,4 @@
+# Chapter 1.
 hello-world
 doc
 format
@@ -5,23 +6,29 @@ debug
 display
 list
 
+# Chapter 2.
 primitves
 tuple
 array-and-slice
 
+# Chapter 3.
 structures
 enums
 use
 linked-list
 
+# Chapter 4.
 scope
 
+# Chapter 5.
 casting
 inference
 
+# Chapter 6.
 from-to
 from-to-string
 
+# Chapter 8.
 if-else
 loop
 match
@@ -29,3 +36,15 @@ guard
 binding
 if-let
 while-let
+
+# Chapter 9.
+fibonnaci
+methods
+closures
+capture
+input-function
+output-function
+as-input
+as-outut
+iterator-any
+hof
