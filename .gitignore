@@ -1,3 +1,7 @@
+# All
+*.rlib
+target/
+
 # Chapter 1.
 hello-world
 doc
@@ -48,3 +52,9 @@ as-input
 as-outut
 iterator-any
 hof
+
+# Chapter 10.
+split
+
+# Chapter 11.
+exec

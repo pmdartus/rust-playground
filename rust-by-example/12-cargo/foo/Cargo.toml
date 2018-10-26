@@ -1,0 +1,7 @@
+[package]
+name = "foo"
+version = "0.1.0"
+authors = ["Pierre-Marie Dartus <dartus.pierremarie@gmail.com>"]
+
+[dependencies]
+clap = "2.27.1"
