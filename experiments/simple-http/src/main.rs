@@ -1,9 +1,11 @@
 extern crate clap;
 extern crate simple_http;
 
+use std::process;
+use std::path::Path;
+
 use clap::{App, Arg, ArgMatches};
 use simple_http::{run, Config};
-use std::process;
 
 fn main() {
     let matches = App::new("simple-http")
@@ -23,7 +25,10 @@ fn main() {
                 .default_value("."),
         ).get_matches();
 
-    let config = parse_cli_args(matches);
+    let config = parse_cli_args(matches).unwrap_or_else(|e| {
+        eprintln!("Error parsing arguments: {}", e);
+        process::exit(1);
+    });
 
     if let Err(e) = run(config) {
         eprintln!("{}", e);
@@ -31,15 +36,20 @@ fn main() {
     };
 }
 
-fn parse_cli_args(matches: ArgMatches) -> Config {
+fn parse_cli_args(matches: ArgMatches) -> Result<Config, &'static str> {
     let port_str = matches.value_of("port").unwrap();
 
-    let port = port_str.parse::<u16>().unwrap_or_else(|_| {
-        eprintln!("Invalid port parameter: {}", port_str);
-        process::exit(1);
-    });
+    let port;
+    match port_str.parse::<u16>() {
+        Ok(value) => port = value,
+        Err(_) => return Err("Invalid port parameter"),
+    }
 
     let path = matches.value_of("path").unwrap().to_owned();
 
-    Config { port, path }
+    if !Path::new(&path).exists() {
+        return Err("Path doesn't exists");
+    }
+
+    Ok(Config { port, path })
 }

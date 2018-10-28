@@ -1,9 +1,19 @@
 use std::error::Error;
+use std::fs;
+use std::fs::File;
 use std::io::prelude::*;
 use std::io::{BufReader, BufWriter};
-use std::net::{TcpListener, TcpStream, SocketAddr};
+use std::net::{SocketAddr, TcpListener, TcpStream};
+use std::path::Path;
+use std::time::{Instant};
 
+mod header;
 mod request;
+mod response;
+mod status;
+
+use request::Request;
+use response::Response;
 
 #[derive(Debug)]
 pub struct Config {
@@ -20,8 +30,7 @@ pub fn run(config: Config) -> Result<(), Box<Error>> {
     for incoming in listener.incoming() {
         match incoming {
             Ok(stream) => {
-                println!("New connection {:?}", stream);
-                handle_connection(stream);
+                handle_connection(stream, &config);
             }
             Err(e) => {
                 // TODO: Improve error handling
@@ -33,25 +42,66 @@ pub fn run(config: Config) -> Result<(), Box<Error>> {
     Ok(())
 }
 
-fn handle_connection(mut stream: TcpStream) {
+fn handle_connection(stream: TcpStream, config: &Config) {
     let mut reader = BufReader::new(&stream);
     let mut writer = BufWriter::new(&stream);
 
+    let start_time = Instant::now();
+
     let request = request::Request::read(&mut reader).unwrap();
 
-    println!("Incoming request:\n{:#?}", request);
+    let response = handle_request(&request, &config);
+    let response_byte = response.serialize().into_bytes();
 
-    let body = format!("echo: {}", request.uri);
-    let headers = [
-        "HTTP/1.1 200 OK",
-        &format!("Cotent-Length: {}", body.bytes().len()),
-        "\r\n",
-    ]
-        .join("\r\n")
-        .to_string();
-    let response = headers + &body;
+    writer.write(&response_byte);
 
-    println!("Response:\n{:#?}", response);
+    let duration = start_time.elapsed();
 
-    writer.write(&response.into_bytes());
+    println!(
+        "{method} {uri} {status} - {response_time:?}",
+        method = request.method,
+        uri = request.uri,
+        status = response.status.code,
+        response_time = duration
+    );
+}
+
+fn handle_request(request: &Request, config: &Config) -> Response {
+    match resolve_path(&request, &config) {
+        Some(path) => {
+            let mut f = File::open(path).unwrap();
+
+            let mut contents = String::new();
+            f.read_to_string(&mut contents);
+
+            let mut response = Response::new(request.http_version.to_string(), status::OK);
+            response.body = Some(contents);
+
+            response
+        }
+        None => Response::new(request.http_version.to_string(), status::NOT_FOUND),
+    }
+}
+
+fn resolve_path(request: &Request, config: &Config) -> Option<String> {
+    let relative_uri = request.uri[1..].to_owned();
+    let requested_path = Path::new(&config.path).join(&relative_uri);
+
+    if requested_path.exists() {
+        return Some(requested_path.to_str().unwrap().to_owned());
+    } else if requested_path.is_dir() {
+        let requested_path_index = requested_path.join("index.html");
+
+        if requested_path_index.exists() {
+            return Some(requested_path_index.to_str().unwrap().to_owned());
+        }
+    } else if None == requested_path.extension() {
+        let requested_path_html = requested_path.with_extension("html");
+
+        if requested_path_html.exists() {
+            return Some(requested_path_html.to_str().unwrap().to_owned());
+        }
+    }
+
+    None
 }

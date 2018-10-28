@@ -3,18 +3,14 @@ use std::io::prelude::*;
 use std::io::BufReader;
 use std::net::TcpStream;
 
+use header::{Header};
+
 #[derive(Debug)]
 pub struct Request {
     pub method: String,
     pub uri: String,
     pub http_version: String,
     pub headers: Vec<Header>,
-}
-
-#[derive(Debug)]
-pub struct Header {
-    pub name: String,
-    pub content: String,
 }
 
 impl Request {
