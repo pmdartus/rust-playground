@@ -1,6 +1,6 @@
 [package]
 name = "minigrep"
 version = "0.1.0"
-authors = ["Pierre-Marie Dartus <p.dartus@salesforce.com>"]
+authors = ["Pierre-Marie Dartus <dartus.pierremarie@gmail.com>"]
 
 [dependencies]
