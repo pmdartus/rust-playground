@@ -34,6 +34,9 @@ impl Response {
             .collect();
         response.append(&mut headers);
 
+        // Empty line before body
+        response.push("".to_owned());
+
         if let Some(body) = &self.body {
             response.push(body.to_string());
         }
